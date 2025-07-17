@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 const (
 	PatternHeight = 2
@@ -12,13 +15,46 @@ const (
 type Wave struct {
 	Regions [WaveHeight][WaveWidth]Region
 }
-type Region struct {
-	PossiblePatterns []Pattern
+
+func NewWave(patterns []Pattern) Wave {
+	regions := [WaveHeight][WaveWidth]Region{}
+	for row := range WaveHeight {
+		for col := range WaveWidth {
+			regions[row][col] = NewRegion(patterns)
+		}
+	}
+
+	return Wave{Regions: regions}
+}
+
+func (e Region) CalculateShannonEntropy() float64 {
+	var sum float64
+	for pattern, coefficient := range e.PatternCoefficients {
+		if !coefficient || pattern.Probability == 0 {
+			continue
+		}
+		result := pattern.Probability * math.Log2(pattern.Probability)
+		sum += result
+	}
+	return -sum
+}
+
+func NewRegion(patterns []Pattern) Region {
+	coefficients := make(map[Pattern]bool, len(patterns))
+	for key := range coefficients {
+		coefficients[key] = true
+	}
+
+	return Region{PatternCoefficients: coefficients}
 }
 
 type Pattern struct {
-	Values      [PatternHeight][PatternWidth]int
-	Probability float64
+	Values            [PatternHeight][PatternWidth]int
+	Probability       float64
+	AdjacentNorth     [][PatternHeight][PatternWidth]int
+	AdjacentNorthEast [][PatternHeight][PatternWidth]int
+	AdjacentEast      [][PatternHeight][PatternWidth]int
+	AdjacentSouthEast [][PatternHeight][PatternWidth]int
 }
 
 func (p Pattern) String() string {
@@ -56,6 +92,10 @@ func ExtractPatterns(input [][]int) []Pattern {
 	}
 
 	return patterns
+}
+
+func ExtractPatternPairs() {
+
 }
 
 func main() {
